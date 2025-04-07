@@ -36,24 +36,37 @@ function App() {
       
       if (inputType === 'youtube') {
         try {
+          console.log('Tentative de transcription pour:', inputValue)
           text = await transcribeYouTubeVideo(inputValue)
+          console.log('Transcription réussie:', text)
         } catch (error) {
+          console.error('Erreur détaillée:', error)
           if (error.message === 'URL YouTube invalide') {
             message.error('L\'URL YouTube fournie est invalide')
+          } else if (error.message === 'Impossible d\'extraire l\'URL audio de la vidéo YouTube') {
+            message.error('Impossible d\'accéder à l\'audio de la vidéo YouTube. La vidéo est peut-être privée ou protégée.')
+          } else if (error.message === 'Clé API AssemblyAI invalide ou expirée') {
+            message.error('La clé API AssemblyAI est invalide ou a expiré. Veuillez contacter l\'administrateur.')
+          } else if (error.message === 'Crédits insuffisants sur le compte AssemblyAI') {
+            message.error('Les crédits du compte AssemblyAI sont épuisés. Veuillez contacter l\'administrateur.')
           } else if (error.message === 'Délai d\'attente dépassé pour la transcription') {
             message.error('La transcription prend plus de temps que prévu. Veuillez réessayer plus tard.')
+          } else if (error.response) {
+            message.error(`Erreur API: ${error.response.data.error || 'Erreur inconnue'}`)
           } else {
             message.error('Erreur lors de la transcription de la vidéo YouTube')
           }
+          setLoading(false)
           return
         }
       }
 
+      console.log('Génération du résumé pour:', text)
       const generatedSummary = await generateSummary(text)
       setSummary(generatedSummary)
       message.success('Résumé généré avec succès')
     } catch (error) {
-      console.error('Erreur:', error)
+      console.error('Erreur lors de la génération du résumé:', error)
       message.error('Une erreur est survenue lors de la génération du résumé')
     } finally {
       setLoading(false)

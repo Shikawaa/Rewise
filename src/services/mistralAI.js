@@ -1,62 +1,74 @@
 import axios from 'axios'
 
-const MISTRAL_API_KEY = '4t6I3WEaaOaRObul3YsjtNmcjmYol5tP'
-const MISTRAL_API_URL = 'https://api.mistral.ai/v1'
+const MISTRAL_API_KEY = import.meta.env.VITE_MISTRAL_API_KEY
+const MISTRAL_API_URL = 'https://api.mistral.ai/v1/chat/completions'
 
-const mistralAI = axios.create({
-  baseURL: MISTRAL_API_URL,
-  headers: {
-    'Authorization': `Bearer ${MISTRAL_API_KEY}`,
-    'Content-Type': 'application/json',
-  },
-})
-
-export const generateSummary = async (text) => {
+export const generateSummary = async (transcription) => {
   try {
-    const response = await mistralAI.post('/chat/completions', {
-      model: 'mistral-tiny',
-      messages: [
-        {
-          role: 'system',
-          content: 'Tu es un expert en résumé de texte. Ton rôle est de créer un résumé concis et clair du texte fourni.'
-        },
-        {
-          role: 'user',
-          content: `Résume le texte suivant de manière concise et claire :\n\n${text}`
+    const response = await axios.post(
+      MISTRAL_API_URL,
+      {
+        model: 'mistral-tiny',
+        messages: [
+          {
+            role: 'system',
+            content: 'Tu es un expert en résumé de contenu. Ton rôle est de créer un résumé clair et concis du texte fourni, en mettant en évidence les points clés.'
+          },
+          {
+            role: 'user',
+            content: `Voici la transcription d'une vidéo YouTube. Peux-tu en faire un résumé structuré et détaillé ?\n\n${transcription}`
+          }
+        ]
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${MISTRAL_API_KEY}`,
+          'Content-Type': 'application/json'
         }
-      ],
-      temperature: 0.7,
-      max_tokens: 500
-    })
+      }
+    )
 
     return response.data.choices[0].message.content
   } catch (error) {
     console.error('Erreur lors de la génération du résumé:', error)
-    throw error
+    if (error.response?.status === 401) {
+      throw new Error('Clé API Mistral invalide ou manquante')
+    }
+    throw new Error('Impossible de générer le résumé')
   }
 }
 
 export const generateFlashcards = async (text) => {
   try {
-    const response = await mistralAI.post('/chat/completions', {
-      model: 'mistral-tiny',
-      messages: [
-        {
-          role: 'system',
-          content: 'Tu es un expert en création de flashcards. Ton rôle est de créer des questions/réponses basées sur le texte fourni.'
-        },
-        {
-          role: 'user',
-          content: `Crée 5 flashcards (questions/réponses) basées sur le texte suivant. Format : Question: [question] Réponse: [réponse]\n\n${text}`
+    const response = await axios.post(
+      MISTRAL_API_URL,
+      {
+        model: 'mistral-tiny',
+        messages: [
+          {
+            role: 'system',
+            content: 'Tu es un expert en création de flashcards. Ton rôle est de créer des questions/réponses basées sur le texte fourni.'
+          },
+          {
+            role: 'user',
+            content: `Crée 5 flashcards (questions/réponses) basées sur le texte suivant. Format : Question: [question] Réponse: [réponse]\n\n${text}`
+          }
+        ]
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${MISTRAL_API_KEY}`,
+          'Content-Type': 'application/json'
         }
-      ],
-      temperature: 0.7,
-      max_tokens: 1000
-    })
+      }
+    )
 
     return response.data.choices[0].message.content
   } catch (error) {
     console.error('Erreur lors de la génération des flashcards:', error)
+    if (error.response?.status === 401) {
+      throw new Error('Clé API Mistral invalide ou manquante')
+    }
     throw error
   }
 } 
