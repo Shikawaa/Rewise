@@ -36,7 +36,8 @@ Plus besoin de perdre du temps à prendre des notes : vous apprenez mieux, plus 
 ⸻
 
 💻 Comment l’utiliser en local ?
-	1.	Clone le projet :
+
+1.	Clone le projet :
 
 git clone <https://github.com/Shikawaa/Simplified-Knowledge>
 cd simplified-knowledge
