@@ -8,10 +8,13 @@ const BACKEND_URL = 'http://localhost:3001'
 export const checkAccountStatus = async () => {
   try {
     console.log('Vérification du statut du compte AssemblyAI...')
+    console.log('Clé API AssemblyAI utilisée:', ASSEMBLYAI_API_KEY ? 'Disponible' : 'Manquante')
+    
     const response = await axios.get(`${ASSEMBLYAI_API_URL}/account`, {
       headers: {
         'Authorization': ASSEMBLYAI_API_KEY
-      }
+      },
+      timeout: 5000
     })
     console.log('Statut du compte AssemblyAI:', response.data)
     return response.data

@@ -193,13 +193,23 @@ app.post('/api/transcribe', async (req, res) => {
   try {
     const { audioUrl } = req.body
     console.log('Démarrage de la transcription pour:', audioUrl)
-    console.log('Clé API AssemblyAI:', ASSEMBLYAI_API_KEY)
+    console.log('Clé API AssemblyAI disponible:', ASSEMBLYAI_API_KEY ? 'Oui' : 'Non')
 
     if (!ASSEMBLYAI_API_KEY) {
       throw new Error('Clé API AssemblyAI manquante')
     }
 
-    // Démarrer la transcription directement avec l'URL YouTube
+    // Vérifier d'abord que l'URL audio est accessible
+    try {
+      console.log('Vérification de l\'accessibilité de l\'URL audio...')
+      const checkResponse = await axios.head(audioUrl)
+      console.log('URL audio accessible:', checkResponse.status)
+    } catch (error) {
+      console.error('Erreur lors de la vérification de l\'URL audio:', error.message)
+      throw new Error(`L'URL audio n'est pas accessible: ${error.message}`)
+    }
+
+    // Démarrer la transcription
     console.log('Envoi de la requête à AssemblyAI...')
     const response = await axios.post(
       `${ASSEMBLYAI_API_URL}/transcript`,
@@ -211,7 +221,8 @@ app.post('/api/transcribe', async (req, res) => {
         headers: {
           'Authorization': ASSEMBLYAI_API_KEY,
           'Content-Type': 'application/json'
-        }
+        },
+        timeout: 30000 // Timeout de 30s
       }
     )
 
@@ -232,7 +243,8 @@ app.post('/api/transcribe', async (req, res) => {
         {
           headers: {
             'Authorization': ASSEMBLYAI_API_KEY
-          }
+          },
+          timeout: 10000 // Timeout de 10s
         }
       )
 
@@ -261,11 +273,36 @@ app.post('/api/transcribe', async (req, res) => {
   } catch (error) {
     console.error('Erreur détaillée lors de la transcription:', error)
     console.error('Stack trace:', error.stack)
-    console.error('Réponse d\'erreur:', error.response?.data)
-    res.status(500).json({ 
-      error: 'Erreur lors de la transcription',
+    
+    let errorMessage = 'Erreur lors de la transcription'
+    let statusCode = 500
+    
+    // Erreurs spécifiques à AssemblyAI
+    if (error.response) {
+      console.error('Réponse d\'erreur:', error.response.data)
+      
+      if (error.response.status === 401) {
+        errorMessage = 'Clé API AssemblyAI invalide'
+        statusCode = 401
+      } else if (error.response.status === 400) {
+        errorMessage = 'Requête invalide: ' + (error.response.data.error || 'Format de requête incorrect')
+        statusCode = 400
+      } else if (error.response.status === 429) {
+        errorMessage = 'Limite de requêtes atteinte pour AssemblyAI'
+        statusCode = 429
+      } else if (error.response.status === 404) {
+        errorMessage = 'Ressource non trouvée'
+        statusCode = 404
+      }
+    } else if (error.code === 'ECONNABORTED') {
+      errorMessage = 'Délai d\'attente dépassé pour la connexion à AssemblyAI'
+    } else if (error.code === 'ENOTFOUND') {
+      errorMessage = 'Impossible de se connecter à AssemblyAI'
+    }
+    
+    res.status(statusCode).json({ 
+      error: errorMessage,
       details: error.message,
-      stack: error.stack,
       response: error.response?.data
     })
   }
