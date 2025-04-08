@@ -25,11 +25,11 @@ export const checkAccountStatus = async () => {
 }
 
 // Obtenir l'URL audio d'une vidéo YouTube
-export const getYouTubeAudioUrl = async (videoUrl) => {
+export const getYouTubeAudioUrl = async (audioUrl) => {
   try {
-    console.log('Tentative d\'extraction de l\'URL audio pour:', videoUrl)
+    console.log('Tentative d\'extraction de l\'URL audio pour:', audioUrl)
     const response = await axios.get(`${BACKEND_URL}/api/youtube/audio-url`, {
-      params: { videoUrl }
+      params: { audioUrl }
     })
     
     if (!response.data.audioUrl) {
@@ -51,7 +51,7 @@ export const getYouTubeAudioUrl = async (videoUrl) => {
 }
 
 // Transcrire une vidéo YouTube
-export const transcribeYouTubeVideo = async (videoUrl) => {
+export const transcribeYouTubeVideo = async (audioUrl) => {
   try {
     console.log('Début du processus de transcription...')
     
@@ -60,66 +60,25 @@ export const transcribeYouTubeVideo = async (videoUrl) => {
     console.log('Statut du compte vérifié avec succès')
 
     // Obtenir l'URL audio
-    const audioUrl = await getYouTubeAudioUrl(videoUrl)
-    console.log('URL audio obtenue avec succès')
+    const publicAudioUrl = await getYouTubeAudioUrl(audioUrl)
+    console.log('URL audio obtenue avec succès:', publicAudioUrl)
 
-    // Démarrer la transcription
-    console.log('Démarrage de la transcription avec AssemblyAI...')
+    // Utiliser le nouvel endpoint de transcription
     const response = await axios.post(
-      `${ASSEMBLYAI_API_URL}/transcript`,
-      {
-        audio_url: audioUrl,
-        language_detection: true
-      },
+      `${BACKEND_URL}/api/transcribe`,
+      { audioUrl: publicAudioUrl },
       {
         headers: {
-          'Authorization': ASSEMBLYAI_API_KEY,
           'Content-Type': 'application/json'
         }
       }
     )
 
-    const transcriptId = response.data.id
-    console.log('ID de transcription:', transcriptId)
-
-    // Attendre que la transcription soit terminée
-    let transcript = null
-    let attempts = 0
-    const maxAttempts = 20 // Maximum 60 secondes d'attente
-
-    while (!transcript && attempts < maxAttempts) {
-      console.log(`Tentative ${attempts + 1}/${maxAttempts} de récupération de la transcription...`)
-      
-      const pollingResponse = await axios.get(
-        `${ASSEMBLYAI_API_URL}/transcript/${transcriptId}`,
-        {
-          headers: {
-            'Authorization': ASSEMBLYAI_API_KEY
-          }
-        }
-      )
-
-      console.log('Statut de la transcription:', pollingResponse.data.status)
-
-      if (pollingResponse.data.status === 'completed') {
-        transcript = pollingResponse.data.text
-        console.log('Transcription terminée avec succès')
-      } else if (pollingResponse.data.status === 'error') {
-        console.error('Erreur de transcription:', pollingResponse.data)
-        throw new Error('Erreur lors de la transcription')
-      } else {
-        // Attendre 3 secondes avant de réessayer
-        console.log('Transcription en cours, attente de 3 secondes...')
-        await new Promise(resolve => setTimeout(resolve, 3000))
-        attempts++
-      }
+    if (!response.data.transcript) {
+      throw new Error('Transcription non trouvée dans la réponse')
     }
 
-    if (!transcript) {
-      throw new Error('Délai d\'attente dépassé pour la transcription')
-    }
-
-    return transcript
+    return response.data.transcript
   } catch (error) {
     console.error('Erreur détaillée lors de la transcription:', error)
     if (error.response?.status === 401) {
