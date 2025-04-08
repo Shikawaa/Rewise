@@ -28,11 +28,11 @@ export const checkAccountStatus = async () => {
 }
 
 // Obtenir l'URL audio d'une vidéo YouTube
-export const getYouTubeAudioUrl = async (audioUrl) => {
+export const getYouTubeAudioUrl = async (videoUrl) => {
   try {
-    console.log('Tentative d\'extraction de l\'URL audio pour:', audioUrl)
+    console.log('Tentative d\'extraction de l\'URL audio pour:', videoUrl)
     const response = await axios.get(`${BACKEND_URL}/api/youtube/audio-url`, {
-      params: { audioUrl }
+      params: { audioUrl: videoUrl }
     })
     
     if (!response.data.audioUrl) {
@@ -67,21 +67,39 @@ export const transcribeYouTubeVideo = async (audioUrl) => {
     console.log('URL audio obtenue avec succès:', publicAudioUrl)
 
     // Utiliser le nouvel endpoint de transcription
-    const response = await axios.post(
-      `${BACKEND_URL}/api/transcribe`,
-      { audioUrl: publicAudioUrl },
-      {
-        headers: {
-          'Content-Type': 'application/json'
+    console.log('Envoi de la requête de transcription au backend...')
+    console.log('URL:', `${BACKEND_URL}/api/transcribe`)
+    console.log('Données:', { audioUrl: publicAudioUrl })
+    
+    try {
+      const response = await axios.post(
+        `${BACKEND_URL}/api/transcribe`,
+        { audioUrl: publicAudioUrl },
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          timeout: 60000 // 60 secondes de timeout
         }
+      )
+
+      console.log('Réponse de transcription reçue:', response.status)
+      
+      if (!response.data.transcript) {
+        console.error('Transcription reçue mais vide')
+        throw new Error('Transcription non trouvée dans la réponse')
       }
-    )
 
-    if (!response.data.transcript) {
-      throw new Error('Transcription non trouvée dans la réponse')
+      console.log('Transcription réussie:', response.data.transcript.substring(0, 50) + '...')
+      return response.data.transcript
+    } catch (error) {
+      console.error('Erreur détaillée lors de la requête de transcription:', error)
+      if (error.response) {
+        console.error('Statut de la réponse:', error.response.status)
+        console.error('Données de la réponse:', error.response.data)
+      }
+      throw error
     }
-
-    return response.data.transcript
   } catch (error) {
     console.error('Erreur détaillée lors de la transcription:', error)
     if (error.response?.status === 401) {
