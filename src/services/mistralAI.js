@@ -27,38 +27,36 @@ export const generateTranscriptSummary = async (transcription) => {
             role: 'user',
             content: `Crée un résumé structuré et hiérarchisé de cette transcription de vidéo YouTube. Utilise des sections claires avec des titres et des sous-titres pour organiser l'information. Utilise le format suivant:
 
-# TITRE PRINCIPAL
+              # TITRE PRINCIPAL
 
-Introduction brève qui pose le contexte général.
+              Introduction brève qui pose le contexte général.
 
-## Section 1
-Contenu de la section, paragraphes concis et informatifs.
+              ## Section 1
+              Contenu de la section, paragraphes concis et informatifs.
 
-Points clés:
-- Premier point important
-- Deuxième point important
-- Etc.
+              Points clés:
+              - Premier point important
+              - Deuxième point important
+              - Etc.
 
-## Section 2
-...et ainsi de suite.
+              ## Section 2
+              ...et ainsi de suite.
 
-# CONCLUSION
+              # CONCLUSION
 
-Synthèse finale des points essentiels.
+              Synthèse finale des points essentiels.
 
-Assure-toi que:
-1. Les titres sont pertinents et reflètent bien le contenu
-2. L'information est organisée logiquement
-3. Les points clés sont mis en évidence
-4. Le résumé reste fidèle au contenu original mais le restructure pour plus de clarté
-5. Tu utilises des paragraphes courts et concis
+              Assure-toi que:
+              1. Les titres sont pertinents et reflètent bien le contenu
+              2. L'information est organisée logiquement
+              3. Les points clés sont mis en évidence
+              4. Le résumé reste fidèle au contenu original mais le restructure pour plus de clarté
+              5. Tu utilises des paragraphes courts et concis
 
-Voici la transcription à résumer:
-
-${transcription}`
+              Voici la transcription à résumer: ${transcription}`
           }
         ],
-        max_tokens: 1500,
+        max_tokens: 10000,
         temperature: 0.2
       },
       {
@@ -101,38 +99,36 @@ export const generateTextSummary = async (text) => {
             role: 'user',
             content: `Crée un résumé structuré et hiérarchisé de ce texte. Utilise des sections claires avec des titres et des sous-titres pour organiser l'information. Utilise le format suivant:
 
-# TITRE PRINCIPAL
+            # TITRE PRINCIPAL
 
-Introduction brève qui pose le contexte général.
+            Introduction brève qui pose le contexte général.
 
-## Section 1
-Contenu de la section, paragraphes concis et informatifs.
+            ## Section 1
+            Contenu de la section, paragraphes concis et informatifs.
 
-Points clés:
-- Premier point important
-- Deuxième point important
-- Etc.
+            Points clés:
+            - Premier point important
+            - Deuxième point important
+            - Etc.
 
-## Section 2
-...et ainsi de suite.
+            ## Section 2
+            ...et ainsi de suite.
 
-# CONCLUSION
+            # CONCLUSION
 
-Synthèse finale des points essentiels.
+            Synthèse finale des points essentiels.
 
-Assure-toi que:
-1. Les titres sont pertinents et reflètent bien le contenu
-2. L'information est organisée logiquement
-3. Les points clés sont mis en évidence
-4. Le résumé reste fidèle au contenu original mais le restructure pour plus de clarté
-5. Tu utilises des paragraphes courts et concis
+            Assure-toi que:
+            1. Les titres sont pertinents et reflètent bien le contenu
+            2. L'information est organisée logiquement
+            3. Les points clés sont mis en évidence
+            4. Le résumé reste fidèle au contenu original mais le restructure pour plus de clarté
+            5. Tu utilises des paragraphes courts et concis
 
-Voici le texte à résumer:
-
-${text}`
+            Voici le texte à résumer: ${text}`
           }
         ],
-        max_tokens: 1500,
+        max_tokens: 10000,
         temperature: 0.2
       },
       {

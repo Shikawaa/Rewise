@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Layout, Typography, Input, Button, Card, Space, message } from 'antd'
 import { YoutubeOutlined, FileTextOutlined, DownloadOutlined } from '@ant-design/icons'
-import { transcribeYouTubeVideo, testAssemblyAI } from './services/assemblyAI'
+import { transcribeYouTubeVideo } from './services/assemblyAI'
 import { generateTranscriptSummary, generateTextSummary, generateFlashcards } from './services/mistralAI'
 import './App.css'
 
@@ -14,27 +14,10 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingFlashcards, setIsLoadingFlashcards] = useState(false)
   const [error, setError] = useState('')
-  const [testResult, setTestResult] = useState('')
   const [summary, setSummary] = useState('')
   const [flashcards, setFlashcards] = useState('')
   const [transcript, setTranscript] = useState('')
   const [inputType, setInputType] = useState('youtube') // 'youtube' ou 'text'
-
-  const handleTest = async () => {
-    setIsLoading(true)
-    setTestResult('')
-    setError('')
-    
-    try {
-      const result = await testAssemblyAI()
-      setTestResult(result)
-    } catch (error) {
-      console.error('Erreur lors du test:', error)
-      setError('Erreur lors du test AssemblyAI: ' + (error.message || 'Une erreur est survenue'))
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleGenerate = async () => {
     setIsLoading(true)
@@ -191,25 +174,15 @@ function App() {
                 />
               )}
               
-              <Space>
-                <Button 
-                  type="primary"
-                  onClick={handleGenerate}
-                  loading={isLoading}
-                  disabled={!input}
-                  block
-                >
-                  Générer le résumé
-                </Button>
-                
-                <Button 
-                  onClick={handleTest}
-                  loading={isLoading}
-                  icon={<DownloadOutlined />}
-                >
-                  Tester AssemblyAI
-                </Button>
-              </Space>
+              <Button 
+                type="primary"
+                onClick={handleGenerate}
+                loading={isLoading}
+                disabled={!input}
+                block
+              >
+                Générer le résumé
+              </Button>
             </Space>
           </Card>
           
@@ -219,12 +192,6 @@ function App() {
             </Card>
           )}
           
-          {testResult && (
-            <Card title="Résultat du test AssemblyAI" className="test-result-card">
-              <Typography.Text>{testResult}</Typography.Text>
-            </Card>
-          )}
-
           {summary && (
             <Card 
               title={
