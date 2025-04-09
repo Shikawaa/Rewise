@@ -66,3 +66,138 @@
 .ant-space {
   width: 100%;
 }
+
+.button-container {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.test-button {
+  background-color: #f0f0f0;
+  border-color: #d9d9d9;
+}
+
+.test-button:hover {
+  background-color: #e6e6e6;
+  border-color: #c0c0c0;
+}
+
+.test-result {
+  margin-top: 20px;
+  background-color: #f0fff0;
+  border: 1px solid #b7eb8f;
+  padding: 15px;
+  border-radius: 4px;
+}
+
+/* Styles pour les flashcards */
+.flashcards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.flashcard-item {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.flashcard-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.flashcard-item .ant-card-head {
+  background-color: #f0f5ff;
+  border-bottom: 1px solid #d6e4ff;
+}
+
+.flashcard-item .ant-typography strong {
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 4px;
+  color: #1677ff;
+}
+
+/* Styles pour le résumé */
+.summary-card {
+  margin-bottom: 20px;
+}
+
+.summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summary-header .ant-typography {
+  margin-bottom: 0;
+}
+
+.summary-content {
+  padding: 8px;
+  text-align: left;
+}
+
+.summary-section-title {
+  margin-top: 24px !important;
+  margin-bottom: 16px !important;
+  color: #1677ff;
+  border-bottom: 1px solid #e8e8e8;
+  padding-bottom: 8px;
+  text-align: left !important;
+}
+
+.summary-section-title:first-child {
+  margin-top: 0 !important;
+}
+
+.summary-important-section {
+  background-color: #f0f5ff;
+  padding: 12px;
+  border-radius: 4px;
+  margin: 20px 0 !important;
+  color: #1677ff;
+  font-weight: bold;
+  font-size: 16px !important;
+  text-align: left !important;
+}
+
+.summary-paragraph {
+  margin-bottom: 16px !important;
+  line-height: 1.6 !important;
+  font-size: 15px;
+  text-align: left;
+}
+
+.summary-list-container {
+  margin: 16px 0;
+  text-align: left;
+}
+
+.summary-list-title {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 16px;
+  color: #333;
+  text-align: left;
+}
+
+.summary-list {
+  margin: 0;
+  padding-left: 20px;
+  text-align: left;
+}
+
+.summary-list li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+/* Mise en évidence des points clés */
+.summary-paragraph strong, .summary-list strong {
+  color: #1677ff;
+}

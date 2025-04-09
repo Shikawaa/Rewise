@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Temporary files
+server/temp
+server/temp/**/*
