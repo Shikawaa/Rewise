@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const ASSEMBLYAI_API_KEY = import.meta.env.VITE_ASSEMBLYAI_API_KEY
+const ASSEMBLYAI_API_KEY = import.meta.env.ASSEMBLYAI_API_KEY
 const ASSEMBLYAI_API_URL = 'https://api.assemblyai.com/v2'
 const BACKEND_URL = 'http://localhost:3001'
 

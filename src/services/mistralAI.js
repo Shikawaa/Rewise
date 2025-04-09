@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const MISTRAL_API_KEY = import.meta.env.VITE_MISTRAL_API_KEY
+const MISTRAL_API_KEY = import.meta.env.MISTRAL_API_KEY
 const MISTRAL_API_URL = 'https://api.mistral.ai/v1/chat/completions'
 
 console.log('Clé API Mistral:', MISTRAL_API_KEY)
