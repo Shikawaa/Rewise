@@ -34,7 +34,8 @@ app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Range'],
-  exposedHeaders: ['Content-Length', 'Content-Type', 'Accept-Ranges', 'Content-Range']
+  exposedHeaders: ['Content-Length', 'Content-Type', 'Accept-Ranges', 'Content-Range'],
+  credentials: true
 }))
 
 app.use(express.json())
@@ -90,7 +91,14 @@ function getVideoId(url) {
   return match ? match[1] : null
 }
 
-app.get('/api/youtube/audio-url', async (req, res) => {
+// Obtenir l'URL de base à partir de la requête
+const getBaseUrl = (req) => {
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  return `${protocol}://${host}`;
+};
+
+app.get('/youtube/audio-url', async (req, res) => {
   try {
     const { audioUrl } = req.query
     console.log('=== EXTRACTION AUDIO YOUTUBE ===')
@@ -120,7 +128,8 @@ app.get('/api/youtube/audio-url', async (req, res) => {
         fs.unlinkSync(outputPath)
       } else {
         // Le fichier existe et n'est pas vide, on peut l'utiliser
-        const audioUrl = `http://localhost:3001/temp/${videoId}.mp3`
+        const baseUrl = getBaseUrl(req);
+        const audioUrl = `${baseUrl}/temp/${videoId}.mp3`
         console.log('URL audio générée:', audioUrl)
         return res.json({ audioUrl })
       }
@@ -149,7 +158,8 @@ app.get('/api/youtube/audio-url', async (req, res) => {
     console.log('Taille:', stats.size, 'octets')
 
     // Créer une URL accessible
-    const localAudioUrl = `http://localhost:3001/temp/${videoId}.mp3`
+    const baseUrl = getBaseUrl(req);
+    const localAudioUrl = `${baseUrl}/temp/${videoId}.mp3`
     console.log('URL audio générée:', localAudioUrl)
 
     res.json({ audioUrl: localAudioUrl })
@@ -166,7 +176,7 @@ app.get('/api/youtube/audio-url', async (req, res) => {
 })
 
 // Endpoint pour la transcription
-app.post('/api/transcribe', async (req, res) => {
+app.post('/transcribe', async (req, res) => {
   try {
     const { audioUrl } = req.body
     console.log('=== DÉBUT DE LA TRANSCRIPTION ===')
@@ -340,7 +350,7 @@ app.post('/api/transcribe', async (req, res) => {
 })
 
 // Endpoint de test pour vérifier la réception de l'URL YouTube
-app.post('/api/test-youtube', async (req, res) => {
+app.post('/test-youtube', async (req, res) => {
   try {
     const { videoUrl } = req.body;
     console.log('=== TEST DE RÉCEPTION URL YOUTUBE ===');
@@ -387,7 +397,8 @@ app.post('/api/test-youtube', async (req, res) => {
     }
     
     // Créer l'URL locale
-    const audioUrl = `http://localhost:3001/temp/${videoId}.mp3`;
+    const baseUrl = getBaseUrl(req);
+    const audioUrl = `${baseUrl}/temp/${videoId}.mp3`;
     console.log('URL audio locale générée:', audioUrl);
     
     // Tester l'upload à AssemblyAI
@@ -443,6 +454,179 @@ app.post('/api/test-youtube', async (req, res) => {
   }
 });
 
+// Route spéciale pour télécharger directement une vidéo YouTube et éviter les problèmes de CORS
+app.get('/direct-youtube-download', async (req, res) => {
+  try {
+    const { videoUrl } = req.query;
+    console.log('=== TÉLÉCHARGEMENT DIRECT YOUTUBE ===');
+    console.log('URL reçue:', videoUrl);
+    
+    if (!videoUrl) {
+      return res.status(400).json({ error: 'URL de la vidéo YouTube requise' });
+    }
+
+    // Extraire l'ID de la vidéo
+    const videoId = getVideoId(videoUrl);
+    if (!videoId) {
+      return res.status(400).json({ error: 'URL YouTube invalide' });
+    }
+
+    console.log('ID vidéo:', videoId);
+    const outputPath = path.join(tempDir, `${videoId}.mp3`);
+
+    // Vérifier si le fichier existe déjà
+    let needsDownload = true;
+    if (fs.existsSync(outputPath)) {
+      console.log('Fichier audio existant trouvé, vérification...');
+      const stats = fs.statSync(outputPath);
+      
+      if (stats.size > 0) {
+        console.log('Fichier valide trouvé, pas besoin de télécharger à nouveau');
+        needsDownload = false;
+      } else {
+        console.log('Fichier vide trouvé, suppression');
+        fs.unlinkSync(outputPath);
+      }
+    }
+
+    // Télécharger la vidéo si nécessaire
+    if (needsDownload) {
+      console.log('Téléchargement de la vidéo YouTube...');
+      const command = `yt-dlp -x --audio-format mp3 --audio-quality 0 -o "${outputPath}" "${videoUrl}"`;
+      
+      try {
+        const { stdout, stderr } = await execAsync(command);
+        console.log('Téléchargement terminé');
+        if (stderr) console.error('Avertissements:', stderr);
+      } catch (dlError) {
+        console.error('Erreur lors du téléchargement:', dlError.message);
+        return res.status(500).json({ 
+          error: 'Échec du téléchargement de la vidéo',
+          details: dlError.message
+        });
+      }
+    }
+
+    // Vérifier le fichier téléchargé
+    if (!fs.existsSync(outputPath) || fs.statSync(outputPath).size === 0) {
+      return res.status(500).json({ error: 'Échec de la création du fichier audio' });
+    }
+
+    // Créer l'URL de l'audio
+    const baseUrl = getBaseUrl(req);
+    const audioUrl = `${baseUrl}/temp/${videoId}.mp3`;
+    console.log('URL audio générée:', audioUrl);
+
+    // Retourner l'URL et inclure l'ID pour référence
+    res.json({
+      success: true,
+      videoId: videoId,
+      audioUrl: audioUrl
+    });
+  } catch (error) {
+    console.error('Erreur lors du téléchargement direct:', error);
+    res.status(500).json({
+      error: 'Erreur lors du téléchargement direct',
+      details: error.message
+    });
+  }
+});
+
+// Endpoint POST pour traiter les vidéos YouTube et éviter les problèmes de CORS
+app.post('/process-youtube', async (req, res) => {
+  try {
+    const { videoUrl } = req.body;
+    console.log('=== TRAITEMENT YOUTUBE (POST) ===');
+    console.log('URL reçue:', videoUrl);
+    
+    if (!videoUrl) {
+      return res.status(400).json({ error: 'URL de la vidéo YouTube requise' });
+    }
+
+    // Extraire l'ID de la vidéo
+    const videoId = getVideoId(videoUrl);
+    if (!videoId) {
+      return res.status(400).json({ error: 'URL YouTube invalide' });
+    }
+
+    console.log('ID vidéo:', videoId);
+    const outputPath = path.join(tempDir, `${videoId}.mp3`);
+
+    // Vérifier si le fichier existe déjà et est valide
+    let needsDownload = true;
+    if (fs.existsSync(outputPath)) {
+      console.log('Fichier audio existant trouvé, vérification...');
+      const stats = fs.statSync(outputPath);
+      
+      if (stats.size > 0) {
+        console.log('Fichier valide trouvé, pas besoin de télécharger à nouveau');
+        needsDownload = false;
+      } else {
+        console.log('Fichier vide trouvé, suppression');
+        fs.unlinkSync(outputPath);
+      }
+    }
+
+    // Télécharger la vidéo si nécessaire
+    if (needsDownload) {
+      console.log('Téléchargement de la vidéo YouTube avec yt-dlp...');
+      try {
+        // Utiliser yt-dlp pour télécharger l'audio
+        const command = `yt-dlp -x --audio-format mp3 --audio-quality 0 -o "${outputPath}" "${videoUrl}"`;
+        console.log('Commande:', command);
+        
+        const { stdout, stderr } = await execAsync(command);
+        console.log('Téléchargement terminé');
+        console.log('Sortie standard:', stdout.substring(0, 500) + (stdout.length > 500 ? '...' : ''));
+        if (stderr) {
+          console.error('Avertissements:', stderr);
+        }
+      } catch (dlError) {
+        console.error('Erreur lors du téléchargement:', dlError.message);
+        return res.status(500).json({ 
+          error: 'Échec du téléchargement de la vidéo',
+          details: dlError.message
+        });
+      }
+    }
+
+    // Vérifier à nouveau que le fichier existe et n'est pas vide
+    if (!fs.existsSync(outputPath)) {
+      return res.status(500).json({ error: 'Le fichier audio n\'a pas été créé' });
+    }
+
+    const stats = fs.statSync(outputPath);
+    if (stats.size === 0) {
+      return res.status(500).json({ error: 'Le fichier audio téléchargé est vide' });
+    }
+
+    console.log('Fichier audio disponible:', outputPath);
+    console.log('Taille du fichier:', stats.size, 'octets');
+
+    // Créer une URL accessible depuis l'extérieur
+    const baseUrl = getBaseUrl(req);
+    const audioUrl = `${baseUrl}/temp/${videoId}.mp3`;
+    console.log('URL audio générée:', audioUrl);
+
+    // Retourner les informations au client
+    res.json({
+      success: true,
+      videoId: videoId,
+      audioUrl: audioUrl,
+      fileSize: stats.size
+    });
+  } catch (error) {
+    console.error('=== ERREUR LORS DU TRAITEMENT YOUTUBE ===');
+    console.error('Message:', error.message);
+    console.error('Stack:', error.stack);
+    
+    res.status(500).json({
+      error: 'Erreur lors du traitement de la vidéo YouTube',
+      details: error.message
+    });
+  }
+});
+
 // Nettoyer les fichiers temporaires toutes les heures
 setInterval(() => {
   fs.readdir(tempDir, (err, files) => {
@@ -474,6 +658,7 @@ app.listen(port, () => {
     origin: '*',
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Range'],
-    exposedHeaders: ['Content-Length', 'Content-Type', 'Accept-Ranges', 'Content-Range']
+    exposedHeaders: ['Content-Length', 'Content-Type', 'Accept-Ranges', 'Content-Range'],
+    credentials: true
   })
 }) 

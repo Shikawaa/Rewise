@@ -2,7 +2,9 @@ import axios from 'axios'
 
 const ASSEMBLYAI_API_KEY = import.meta.env.ASSEMBLYAI_API_KEY
 const ASSEMBLYAI_API_URL = 'https://api.assemblyai.com/v2'
-const BACKEND_URL = 'http://localhost:3001'
+
+// Utiliser le chemin API relatif pour que les requêtes soient traitées par le proxy Vite
+const BACKEND_URL = '/api'  // Sera routé via le proxy Vite vers le serveur backend
 
 console.log('Clé API AssemblyAI:', ASSEMBLYAI_API_KEY)
 
@@ -33,7 +35,7 @@ export const checkAccountStatus = async () => {
 export const getYouTubeAudioUrl = async (videoUrl) => {
   try {
     console.log('Tentative d\'extraction de l\'URL audio pour:', videoUrl)
-    const response = await axios.get(`${BACKEND_URL}/api/youtube/audio-url`, {
+    const response = await axios.get(`${BACKEND_URL}/youtube/audio-url`, {
       params: { audioUrl: videoUrl }
     })
     
@@ -71,10 +73,15 @@ export const transcribeYouTubeVideo = async (videoUrl) => {
     }
     console.log('ID de la vidéo extrait:', videoId)
 
-    // Obtenir l'URL audio
-    console.log('Demande d\'extraction de l\'URL audio au serveur backend...')
-    const response = await axios.get(`${BACKEND_URL}/api/youtube/audio-url`, {
-      params: { audioUrl: videoUrl }
+    // Utiliser une requête POST au lieu de GET pour éviter les problèmes de CORS
+    console.log('Envoi de la requête pour télécharger la vidéo YouTube...')
+    const response = await axios.post(`${BACKEND_URL}/process-youtube`, {
+      videoUrl: videoUrl
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      timeout: 120000 // 2 minutes de timeout pour le téléchargement
     })
     
     if (!response.data.audioUrl) {
@@ -88,7 +95,7 @@ export const transcribeYouTubeVideo = async (videoUrl) => {
     console.log('Envoi de la requête de transcription au backend...')
     
     const transcriptionResponse = await axios.post(
-      `${BACKEND_URL}/api/transcribe`,
+      `${BACKEND_URL}/transcribe`,
       { audioUrl: publicAudioUrl },
       {
         headers: {
