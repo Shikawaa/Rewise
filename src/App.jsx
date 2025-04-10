@@ -212,7 +212,7 @@ function App() {
 
     try {
       // Formater les flashcards pour le téléchargement
-      let downloadContent = 'FLASHCARDS - SIMPLIFIED KNOWLEDGE\n\n';
+      let downloadContent = 'FLASHCARDS - REWISE\n\n';
       
       // Traiter chaque flashcard
       const cards = flashcards.split(/Flashcard \d+/).filter(card => card.trim());
@@ -389,8 +389,14 @@ function App() {
       <header className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
         <div className="container mx-auto max-w-screen-xl px-6 py-4 flex items-center">
           <div className="flex items-center gap-2">
-            <ActivityLogIcon className="h-6 w-6 text-purple-600" />
-            <h1 className="text-xl font-semibold">Simplified Knowledge</h1>
+            <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-purple-600">
+              <circle cx="16" cy="16" r="15" stroke="currentColor" strokeWidth="2" fill="none"/>
+              <path d="M11 7.5H18C20.2091 7.5 22 9.29086 22 11.5C22 13.7091 20.2091 15.5 18 15.5H15L21 24.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M11 7.5V24.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M11 15.5H18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M24 9C18 15 18 17 24 23" stroke="#9F7AEA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <h1 className="text-xl font-semibold text-purple-600">Rewise</h1>
           </div>
         </div>
       </header>
@@ -411,7 +417,17 @@ function App() {
                     className="flex items-center gap-2"
                     aria-label="Mode YouTube"
                   >
-                    <VideoIcon className="h-4 w-4" />
+                    <svg 
+                      width="16" 
+                      height="16" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="text-current"
+                    >
+                      <rect x="2" y="5" width="20" height="14" rx="4" stroke="currentColor" strokeWidth="2" fill="none" />
+                      <path d="M10 9.5L15 12L10 14.5V9.5Z" fill="currentColor" stroke="currentColor" strokeWidth="0.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                     YouTube
                   </Button>
                   <Button 
@@ -450,8 +466,9 @@ function App() {
                   onClick={handleGenerate}
                   disabled={!getActiveInput() || getIsLoading()}
                   fullWidth
+                  size="lg"
                   aria-label="Générer le résumé"
-                  className="transition-all duration-200 ease-in-out"
+                  className="transition-all duration-200 ease-in-out hover:scale-[1.01] shadow-sm"
                 >
                   {getIsLoading() ? 'Traitement en cours...' : 'Générer le résumé'}
                 </Button>
@@ -471,17 +488,19 @@ function App() {
             <div className="space-y-6">
               <Card className="fade-in summary-card animate-summary">
                 <CardHeader className="flex flex-row items-center justify-between p-6 pb-0">
-                  <CardTitle>Résumé</CardTitle>
+                  <CardTitle className="text-3xl font-bold">Résumé</CardTitle>
                   <Button
                     onClick={handleGenerateFlashcards}
                     disabled={getIsLoadingFlashcards()}
                     aria-label="Générer des flashcards"
+                    size="md"
+                    className="hover:scale-[1.02] transition-transform"
                   >
                     {getIsLoadingFlashcards() ? 'Génération...' : 'Générer des flashcards'}
                   </Button>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <Markdown content={getActiveSummary()} className="prose max-w-none text-reveal" />
+                  <Markdown content={getActiveSummary()} className="prose max-w-none text-reveal prose-headings:mt-8 prose-p:mb-6 prose-headings:mb-4 prose-h2:mt-10 [&_h2:last-of-type]:mt-14 [&_p:last-of-type]:mt-10 [&_p:last-of-type]:pt-4 prose-ul:-mt-6 prose-ol:-mt-6 prose-li:mt-1" />
                 </CardContent>
               </Card>
               

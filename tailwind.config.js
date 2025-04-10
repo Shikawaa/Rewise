@@ -24,6 +24,12 @@ export default {
           600: '#7C3AED',
           700: '#6D28D9',
         },
+        rewise: {
+          blue: '#0A2342',
+          mint: '#3BCEAC',
+          lightmint: '#6EE7D1',
+          darkmint: '#2BA68C',
+        },
       },
     },
   },
