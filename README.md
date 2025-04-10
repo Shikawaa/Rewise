@@ -1,11 +1,11 @@
-# 🎓 Simplified Knowledge
+# 🎓 Rewrite
 
 Transformez vos vidéos et textes en savoir structuré, en un clic.  
 ✨ Le site qui synthétise vos contenus d’apprentissage pour mieux retenir, plus vite.  
   
-### 🚀 C’est quoi Simplified Knowledge ?
+### 🚀 C’est quoi Rewrite ?
 
-Simplified Knowledge, c’est votre compagnon d’étude intelligent.  
+Rewrite, c’est votre compagnon d’étude intelligent.  
 Une vidéo YouTube à analyser ? Un texte dense à résumer ? Notre outil le transforme instantanément en :  
 	- ✅ Transcription claire (via un simple lien YouTube)  
 	- ✅ Résumé concis et intelligent  
@@ -31,7 +31,7 @@ Plus besoin de perdre du temps à prendre des notes : vous apprenez mieux, plus 
 
 1. Clone le projet :
 ```bash
-git clone https://github.com/Shikawaa/Simplified-Knowledge
+git clone https://github.com/Shikawaa/Rewise
 cd simplified-knowledge
 ```
 
@@ -42,8 +42,8 @@ yarn install
 
 3. Créez un fichier .env à la racine du projet :
 ```bash
-VITE_ASSEMBLYAI_API_KEY=ta_clé_assemblyai
-VITE_MISTRAL_API_KEY=ta_clé_mistra
+ASSEMBLYAI_API_KEY=ta_clé_assemblyai
+MISTRAL_API_KEY=ta_clé_mistra
 ```
 
 4. Lance le projet :
