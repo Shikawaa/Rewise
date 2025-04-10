@@ -128,6 +128,34 @@ function App() {
         const textSummary = await generateTextSummary(input)
         setTextSummary(textSummary)
       }
+      
+      // Faire défiler la page vers le titre "Résumé" après un court délai
+      setTimeout(() => {
+        // Cibler directement le CardHeader qui contient le titre "Résumé"
+        const summaryHeader = document.querySelector('.summary-card > div > header');
+        if (summaryHeader) {
+          // Ajouter un petit décalage vertical pour voir complètement le titre et le bouton
+          const yOffset = -20; // décalage de 20px vers le haut
+          const y = summaryHeader.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          
+          window.scrollTo({
+            top: y,
+            behavior: 'smooth'
+          });
+        } else {
+          // Fallback au cas où la structure DOM aurait changé
+          const summaryCard = document.querySelector('.summary-card');
+          if (summaryCard) {
+            const yOffset = -20;
+            const y = summaryCard.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            window.scrollTo({
+              top: y,
+              behavior: 'smooth'
+            });
+          }
+        }
+      }, 300);
+      
     } catch (error) {
       console.error('Erreur:', error)
       setError(error.message || 'Une erreur est survenue')
@@ -151,6 +179,22 @@ function App() {
       console.log('Génération des flashcards...')
       const generatedFlashcards = await generateFlashcards(transcript)
       setActiveFlashcards(generatedFlashcards)
+      
+      // Afficher la notification de succès
+      showFlashcardsGeneratedNotification();
+      
+      // Faire défiler la page vers la section des flashcards
+      setTimeout(() => {
+        const flashcardsContainer = document.querySelector('.bounce-in');
+        if (flashcardsContainer) {
+          const header = flashcardsContainer.querySelector('h2') || flashcardsContainer.querySelector('header');
+          if (header) {
+            header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          } else {
+            flashcardsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+      }, 300);
     } catch (error) {
       console.error('Erreur lors de la génération des flashcards:', error)
       setError('Erreur lors de la génération des flashcards: ' + (error.message || 'Une erreur est survenue'))
@@ -291,68 +335,53 @@ function App() {
     console.log('Notification de téléchargement améliorée affichée');
   };
 
-  // Fonction pour générer des flashcards de test
-  const handleTestFlashcards = () => {
-    const testFlashcards = `Flashcard 1
-Question: Qu'est-ce que React?
-Réponse: React est une bibliothèque JavaScript pour construire des interfaces utilisateur, développée par Facebook.
-
-Flashcard 2
-Question: Quelle est la différence entre props et state dans React?
-Réponse: Les props sont transmises d'un composant parent à un composant enfant et sont immuables, tandis que le state est géré à l'intérieur d'un composant et peut changer.
-
-Flashcard 3
-Question: Qu'est-ce qu'un hook dans React?
-Réponse: Les hooks sont des fonctions qui permettent aux composants fonctionnels d'utiliser l'état et d'autres fonctionnalités de React sans écrire une classe.`;
-
-    setTextTranscript("Test de transcription");
-    setTextFlashcards(testFlashcards);
-    console.log("Flashcards de test générées");
-  };
-
-  // Fonction pour tester l'ensemble du processus avec un transcript prédéfini
-  const handleTestComplet = async () => {
-    setIsLoading(true);
-    setError('');
-    setSummary('');
-    setFlashcards('');
+  // Fonction pour afficher la notification de génération des flashcards
+  const showFlashcardsGeneratedNotification = () => {
+    // Créer l'élément de notification
+    const message = document.createElement('div');
+    message.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white border-2 border-purple-500 text-gray-800 px-6 py-5 rounded-lg shadow-xl z-50';
+    message.style.minWidth = '300px';
+    message.style.animation = 'fadeInOut 3s ease-in-out';
     
-    const testTranscript = `Le React est une bibliothèque JavaScript développée par Facebook qui est devenue l'un des outils les plus populaires pour créer des interfaces utilisateur web.
-
-React utilise un paradigme de programmation déclaratif, où les développeurs décrivent à quoi l'interface utilisateur devrait ressembler, et React s'occupe de mettre à jour le DOM quand les données sous-jacentes changent. Cette approche est différente du développement impératif traditionnel.
-
-Le concept central dans React est le composant, qui est une unité réutilisable et indépendante qui encapsule une partie de l'interface utilisateur. Les composants peuvent être assemblés comme des blocs de construction pour créer des applications complexes.
-
-React utilise un DOM virtuel pour améliorer les performances. Au lieu de mettre à jour directement le DOM du navigateur, React crée une représentation virtuelle du DOM en mémoire, calcule les différences avant et après un changement d'état, puis met à jour le DOM réel de la manière la plus efficace possible.
-
-Les hooks, introduits dans React 16.8, permettent aux composants fonctionnels d'utiliser les fonctionnalités qui étaient auparavant réservées aux composants de classe, comme l'état et les effets secondaires.`;
+    // Ajouter un style pour l'animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fadeInOut {
+        0% { opacity: 0; transform: translate(-50%, -40%); }
+        15% { opacity: 1; transform: translate(-50%, -50%); }
+        85% { opacity: 1; transform: translate(-50%, -50%); }
+        100% { opacity: 0; transform: translate(-50%, -60%); }
+      }
+    `;
+    document.head.appendChild(style);
     
-    try {
-      // Définir le transcript
-      console.log('Utilisation du transcript de test');
-      setTextTranscript(testTranscript);
-      
-      // Mémoriser le texte dans l'input approprié
-      setTextInput(testTranscript);
-      setInputType('text');
-      
-      // Générer le résumé
-      console.log('Génération du résumé à partir du transcript de test');
-      const testSummary = await generateTextSummary(testTranscript);
-      setTextSummary(testSummary);
-      
-      // Générer les flashcards
-      console.log('Génération des flashcards à partir du transcript de test');
-      const generatedFlashcards = await generateFlashcards(testTranscript);
-      setTextFlashcards(generatedFlashcards);
-      
-      console.log('Test complet terminé avec succès');
-    } catch (error) {
-      console.error('Erreur pendant le test complet:', error);
-      setError('Erreur pendant le test: ' + (error.message || 'Une erreur est survenue'));
-    } finally {
-      setIsLoading(false);
-    }
+    // Contenu de la notification
+    message.innerHTML = `
+      <div class="flex flex-col items-center text-center">
+        <div class="bg-purple-100 p-3 rounded-full mb-3">
+          <svg class="h-10 w-10 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-bold mb-1">Flashcards générées !</h3>
+        <p class="text-gray-600">Vos flashcards sont prêtes à être utilisées</p>
+      </div>
+    `;
+    
+    // Ajouter au DOM
+    document.body.appendChild(message);
+    
+    // Supprimer le message et le style après l'animation
+    setTimeout(() => {
+      if (document.body.contains(message)) {
+        document.body.removeChild(message);
+      }
+      if (document.head.contains(style)) {
+        document.head.removeChild(style);
+      }
+    }, 3000);
+    
+    console.log('Notification de génération des flashcards affichée');
   };
 
   return (
@@ -398,14 +427,6 @@ Les hooks, introduits dans React 16.8, permettent aux composants fonctionnels d'
                     <FileTextIcon className="h-4 w-4" />
                     Texte
                   </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={handleTestComplet}
-                    className="flex items-center gap-2 ml-auto"
-                    aria-label="Test Complet"
-                  >
-                    Test Complet
-                  </Button>
                 </div>
                 
                 {inputType === 'youtube' ? (
@@ -448,7 +469,7 @@ Les hooks, introduits dans React 16.8, permettent aux composants fonctionnels d'
           
           {getActiveSummary() && (
             <div className="space-y-6">
-              <Card className="fade-in">
+              <Card className="fade-in summary-card animate-summary">
                 <CardHeader className="flex flex-row items-center justify-between p-6 pb-0">
                   <CardTitle>Résumé</CardTitle>
                   <Button
@@ -460,15 +481,16 @@ Les hooks, introduits dans React 16.8, permettent aux composants fonctionnels d'
                   </Button>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <Markdown content={getActiveSummary()} className="prose max-w-none" />
+                  <Markdown content={getActiveSummary()} className="prose max-w-none text-reveal" />
                 </CardContent>
               </Card>
               
               {getActiveFlashcards() && (
-                <div className="fade-in">
+                <div className="bounce-in">
                   <FlashcardList 
                     flashcards={getActiveFlashcards()} 
                     onDownload={handleDownload}
+                    useStaggeredAnimation={true}
                   />
                 </div>
               )}

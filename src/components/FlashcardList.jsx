@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { DownloadIcon } from '@radix-ui/react-icons';
@@ -59,9 +59,21 @@ const cardStyles = `
   }
 `;
 
-const FlashcardList = ({ flashcards, onDownload }) => {
+const FlashcardList = ({ flashcards, onDownload, useStaggeredAnimation = false }) => {
   // État pour suivre les cartes retournées
   const [flippedCards, setFlippedCards] = useState({});
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  
+  // Déclencher l'animation de succès lors de la génération de nouvelles flashcards
+  useEffect(() => {
+    if (flashcards) {
+      setShowSuccessAnimation(true);
+      const timer = setTimeout(() => {
+        setShowSuccessAnimation(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [flashcards]);
   
   if (!flashcards) return null;
 
@@ -87,6 +99,10 @@ const FlashcardList = ({ flashcards, onDownload }) => {
     }));
   };
 
+  // Déterminer la classe d'animation à utiliser
+  const containerAnimationClass = useStaggeredAnimation ? 'staggered-fade-in' : '';
+  const itemAnimationClass = showSuccessAnimation ? 'success-pulse' : '';
+
   return (
     <div className="space-y-6">
       {/* Insérer le style pour les animations */}
@@ -104,9 +120,9 @@ const FlashcardList = ({ flashcards, onDownload }) => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${containerAnimationClass}`}>
         {cards.map((card, index) => (
-          <div key={index} className="flashcard-container fade-in">
+          <div key={index} className={`flashcard-container ${itemAnimationClass}`}>
             <div 
               className={`flashcard ${flippedCards[index] ? 'flipped' : ''}`} 
               onClick={() => flipCard(index)}
