@@ -9,22 +9,91 @@ import { Markdown } from './components/ui/Markdown'
 import FlashcardList from './components/FlashcardList'
 
 function App() {
-  const [input, setInput] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [isLoadingFlashcards, setIsLoadingFlashcards] = useState(false)
+  // Inputs
+  const [youtubeInput, setYoutubeInput] = useState('')
+  const [textInput, setTextInput] = useState('')
+  
+  // États pour le mode YouTube
+  const [youtubeTranscript, setYoutubeTranscript] = useState('')
+  const [youtubeSummary, setYoutubeSummary] = useState('')
+  const [youtubeFlashcards, setYoutubeFlashcards] = useState('')
+  const [youtubeIsLoading, setYoutubeIsLoading] = useState(false)
+  const [youtubeIsLoadingFlashcards, setYoutubeIsLoadingFlashcards] = useState(false)
+  
+  // États pour le mode Texte
+  const [textTranscript, setTextTranscript] = useState('')
+  const [textSummary, setTextSummary] = useState('')
+  const [textFlashcards, setTextFlashcards] = useState('')
+  const [textIsLoading, setTextIsLoading] = useState(false)
+  const [textIsLoadingFlashcards, setTextIsLoadingFlashcards] = useState(false)
+  
+  // États communs
   const [error, setError] = useState('')
-  const [summary, setSummary] = useState('')
-  const [flashcards, setFlashcards] = useState('')
-  const [transcript, setTranscript] = useState('')
   const [inputType, setInputType] = useState('youtube') // 'youtube' ou 'text'
 
+  // Obtenir les états actifs en fonction du mode
+  const getActiveInput = () => inputType === 'youtube' ? youtubeInput : textInput;
+  const getActiveTranscript = () => inputType === 'youtube' ? youtubeTranscript : textTranscript;
+  const getActiveSummary = () => inputType === 'youtube' ? youtubeSummary : textSummary;
+  const getActiveFlashcards = () => inputType === 'youtube' ? youtubeFlashcards : textFlashcards;
+  const getIsLoading = () => inputType === 'youtube' ? youtubeIsLoading : textIsLoading;
+  const getIsLoadingFlashcards = () => inputType === 'youtube' ? youtubeIsLoadingFlashcards : textIsLoadingFlashcards;
+
+  // Mettre à jour les états actifs
+  const setActiveTranscript = (value) => {
+    if (inputType === 'youtube') {
+      setYoutubeTranscript(value);
+    } else {
+      setTextTranscript(value);
+    }
+  };
+  
+  const setActiveSummary = (value) => {
+    if (inputType === 'youtube') {
+      setYoutubeSummary(value);
+    } else {
+      setTextSummary(value);
+    }
+  };
+  
+  const setActiveFlashcards = (value) => {
+    if (inputType === 'youtube') {
+      setYoutubeFlashcards(value);
+    } else {
+      setTextFlashcards(value);
+    }
+  };
+  
+  const setActiveIsLoading = (value) => {
+    if (inputType === 'youtube') {
+      setYoutubeIsLoading(value);
+    } else {
+      setTextIsLoading(value);
+    }
+  };
+  
+  const setActiveIsLoadingFlashcards = (value) => {
+    if (inputType === 'youtube') {
+      setYoutubeIsLoadingFlashcards(value);
+    } else {
+      setTextIsLoadingFlashcards(value);
+    }
+  };
+
   const handleGenerate = async () => {
-    // Réinitialiser tous les états au début
-    setIsLoading(true)
+    // Récupérer l'input correspondant au mode actuel
+    const input = getActiveInput();
+    if (!input.trim()) {
+      setError('Veuillez entrer ' + (inputType === 'youtube' ? 'une URL YouTube' : 'du texte'));
+      return;
+    }
+
+    // Réinitialiser les états du mode actif
+    setActiveIsLoading(true)
     setError('')
-    setSummary('')
-    setFlashcards('')
-    setTranscript('')
+    setActiveSummary('')
+    setActiveFlashcards('')
+    setActiveTranscript('')
 
     try {
       if (inputType === 'youtube') {
@@ -41,55 +110,57 @@ function App() {
         console.log('Transcription obtenue:', transcription ? 'OK' : 'ÉCHEC')
         
         // Stocker la transcription pour une utilisation ultérieure
-        setTranscript(transcription)
+        setYoutubeTranscript(transcription)
         
         // Génération du résumé spécifique pour les transcriptions
         console.log('Génération du résumé de la transcription...')
         const transcriptSummary = await generateTranscriptSummary(transcription)
-        setSummary(transcriptSummary)
+        setYoutubeSummary(transcriptSummary)
       } else {
         // Traitement d'un texte collé
         console.log('Traitement du texte collé...')
         
         // Stocker le texte pour une utilisation ultérieure
-        setTranscript(input)
+        setTextTranscript(input)
         
         // Génération du résumé spécifique pour les textes
         console.log('Génération du résumé du texte...')
         const textSummary = await generateTextSummary(input)
-        setSummary(textSummary)
+        setTextSummary(textSummary)
       }
     } catch (error) {
       console.error('Erreur:', error)
       setError(error.message || 'Une erreur est survenue')
     } finally {
-      setIsLoading(false)
+      setActiveIsLoading(false)
     }
   }
   
   const handleGenerateFlashcards = async () => {
+    const transcript = getActiveTranscript();
     if (!transcript) {
       setError('Veuillez d\'abord générer un résumé pour obtenir des flashcards')
       return
     }
     
-    setIsLoadingFlashcards(true)
+    setActiveIsLoadingFlashcards(true)
     setError('')
-    setFlashcards('')
+    setActiveFlashcards('')
     
     try {
       console.log('Génération des flashcards...')
       const generatedFlashcards = await generateFlashcards(transcript)
-      setFlashcards(generatedFlashcards)
+      setActiveFlashcards(generatedFlashcards)
     } catch (error) {
       console.error('Erreur lors de la génération des flashcards:', error)
       setError('Erreur lors de la génération des flashcards: ' + (error.message || 'Une erreur est survenue'))
     } finally {
-      setIsLoadingFlashcards(false)
+      setActiveIsLoadingFlashcards(false)
     }
   }
 
   const handleDownload = () => {
+    const flashcards = getActiveFlashcards();
     if (!flashcards) {
       console.error('Aucune flashcard à télécharger');
       return;
@@ -118,11 +189,11 @@ function App() {
         }
       });
       
-      console.log('Contenu du fichier préparé pour téléchargement');
+      // Générer un nom de fichier qui inclut le type de contenu
+      const contentType = inputType === 'youtube' ? 'youtube' : 'texte';
+      const filename = `flashcards_${contentType}_${new Date().toISOString().slice(0,10)}.txt`;
       
       // Approche simplifiée de téléchargement
-      const filename = `flashcards_${new Date().toISOString().slice(0,10)}.txt`;
-      
       // Créer un élément invisible mais fonctionnel
       const element = document.createElement('a');
       
@@ -135,7 +206,7 @@ function App() {
       element.download = filename; 
       element.target = '_blank';
       
-      // Ajouter à la page (mais sans le cacher)
+      // Ajouter à la page
       document.body.appendChild(element);
       
       // Déclencher le téléchargement
@@ -234,8 +305,8 @@ Flashcard 3
 Question: Qu'est-ce qu'un hook dans React?
 Réponse: Les hooks sont des fonctions qui permettent aux composants fonctionnels d'utiliser l'état et d'autres fonctionnalités de React sans écrire une classe.`;
 
-    setTranscript("Test de transcription");
-    setFlashcards(testFlashcards);
+    setTextTranscript("Test de transcription");
+    setTextFlashcards(testFlashcards);
     console.log("Flashcards de test générées");
   };
 
@@ -259,17 +330,21 @@ Les hooks, introduits dans React 16.8, permettent aux composants fonctionnels d'
     try {
       // Définir le transcript
       console.log('Utilisation du transcript de test');
-      setTranscript(testTranscript);
+      setTextTranscript(testTranscript);
+      
+      // Mémoriser le texte dans l'input approprié
+      setTextInput(testTranscript);
+      setInputType('text');
       
       // Générer le résumé
       console.log('Génération du résumé à partir du transcript de test');
       const testSummary = await generateTextSummary(testTranscript);
-      setSummary(testSummary);
+      setTextSummary(testSummary);
       
       // Générer les flashcards
       console.log('Génération des flashcards à partir du transcript de test');
       const generatedFlashcards = await generateFlashcards(testTranscript);
-      setFlashcards(generatedFlashcards);
+      setTextFlashcards(generatedFlashcards);
       
       console.log('Test complet terminé avec succès');
     } catch (error) {
@@ -300,11 +375,8 @@ Les hooks, introduits dans React 16.8, permettent aux composants fonctionnels d'
                   <Button 
                     variant={inputType === 'youtube' ? 'default' : 'outline'}
                     onClick={() => {
-                      // Réinitialiser les états lors du changement de mode
+                      // Juste changer le mode sans réinitialiser les résultats
                       setInputType('youtube');
-                      setSummary('');
-                      setFlashcards('');
-                      setTranscript('');
                       setError('');
                     }}
                     className="flex items-center gap-2"
@@ -316,11 +388,8 @@ Les hooks, introduits dans React 16.8, permettent aux composants fonctionnels d'
                   <Button 
                     variant={inputType === 'text' ? 'default' : 'outline'}
                     onClick={() => {
-                      // Réinitialiser les états lors du changement de mode
+                      // Juste changer le mode sans réinitialiser les résultats
                       setInputType('text');
-                      setSummary('');
-                      setFlashcards('');
-                      setTranscript('');
                       setError('');
                     }}
                     className="flex items-center gap-2"
@@ -342,15 +411,15 @@ Les hooks, introduits dans React 16.8, permettent aux composants fonctionnels d'
                 {inputType === 'youtube' ? (
                   <Input
                     placeholder="Entrez l'URL de la vidéo YouTube"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    value={youtubeInput}
+                    onChange={(e) => setYoutubeInput(e.target.value)}
                     className="text-gray-800"
                   />
                 ) : (
                   <Textarea
                     placeholder="Collez votre texte ici"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    value={textInput}
+                    onChange={(e) => setTextInput(e.target.value)}
                     rows={6}
                     className="text-gray-800"
                   />
@@ -358,12 +427,12 @@ Les hooks, introduits dans React 16.8, permettent aux composants fonctionnels d'
                 
                 <Button 
                   onClick={handleGenerate}
-                  disabled={!input || isLoading}
+                  disabled={!getActiveInput() || getIsLoading()}
                   fullWidth
                   aria-label="Générer le résumé"
                   className="transition-all duration-200 ease-in-out"
                 >
-                  {isLoading ? 'Traitement en cours...' : 'Générer le résumé'}
+                  {getIsLoading() ? 'Traitement en cours...' : 'Générer le résumé'}
                 </Button>
               </div>
             </CardContent>
@@ -377,28 +446,28 @@ Les hooks, introduits dans React 16.8, permettent aux composants fonctionnels d'
             </Card>
           )}
           
-          {summary && (
+          {getActiveSummary() && (
             <div className="space-y-6">
               <Card className="fade-in">
                 <CardHeader className="flex flex-row items-center justify-between p-6 pb-0">
                   <CardTitle>Résumé</CardTitle>
                   <Button
                     onClick={handleGenerateFlashcards}
-                    disabled={isLoadingFlashcards}
+                    disabled={getIsLoadingFlashcards()}
                     aria-label="Générer des flashcards"
                   >
-                    {isLoadingFlashcards ? 'Génération...' : 'Générer des flashcards'}
+                    {getIsLoadingFlashcards() ? 'Génération...' : 'Générer des flashcards'}
                   </Button>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <Markdown content={summary} className="prose max-w-none" />
+                  <Markdown content={getActiveSummary()} className="prose max-w-none" />
                 </CardContent>
               </Card>
               
-              {flashcards && (
+              {getActiveFlashcards() && (
                 <div className="fade-in">
                   <FlashcardList 
-                    flashcards={flashcards} 
+                    flashcards={getActiveFlashcards()} 
                     onDownload={handleDownload}
                   />
                 </div>
